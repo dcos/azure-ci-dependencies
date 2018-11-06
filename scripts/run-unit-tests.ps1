@@ -8,14 +8,13 @@ Param(
 
 $LIBSODIUM_GIT_URL = "https://github.com/jedisct1/libsodium"
 
-# $GOLANG_DOWNLOAD_LINK = "https://dl.google.com/go/go1.9.4.windows-amd64.msi"
 $GOLANG_DOWNLOAD_LINK = "https://dl.google.com/go/go1.11.windows-amd64.msi"
 $GIT_DOWNLOAD_LINK = "https://github.com/git-for-windows/git/releases/download/v2.16.1.windows.3/Git-2.16.1.3-64-bit.exe"
 $7_ZIP_DOWNLOAD_LINK = "https://www.7-zip.org/a/7z1801-x64.exe"
 $2012_RUNTIME_DOWNLOAD_LINK = "https://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe"
 $2013_RUNTIME_DOWNLOAD_LINK = "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
 $DIG_DOWNLOAD_LINK = "http://dcos-win.westus2.cloudapp.azure.com/downloads/dig-x64.zip"
-$OTP202_DOWNLOAD_LINK = "http://dcos-win.westus2.cloudapp.azure.com/downloads/erl9.2.zip"
+$OTP_DOWNLOAD_LINK = "http://erlang.org/download/otp_win64_21.1.exe"
 $VS_2017_DOWNLOAD_LINK = "https://download.visualstudio.microsoft.com/download/pr/11886246/045b56eb413191d03850ecc425172a7d/vs_Community.exe"
 $MSYS2_DOWNLOAD_LINK = "http://dcos-win.westus2.cloudapp.azure.com/downloads/msys2-x64.zip"
 
@@ -23,7 +22,7 @@ $GIT_DIR = Join-Path $env:ProgramFiles "Git"
 $GO_DIR = Join-Path $env:SystemDrive "go"
 $7_ZIP_DIR = Join-Path $env:ProgramFiles "7-Zip"
 $DIG_DIR = Join-Path $env:ProgramFiles "Dig"
-$OPT202_DIR = Join-Path $env:ProgramFiles "erl9.2"
+$OTP_DIR = Join-Path $env:ProgramFiles "erlang"
 $VS_2017_DIR = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\2017\Community"
 
 
@@ -202,16 +201,16 @@ function Install-Msys2 {
     Write-Output "Installing Msys2"
     $zipPath = Join-Path $env:TEMP "msys2.zip"
     Start-FileDownload -URL $MSYS2_DOWNLOAD_LINK -Destination $zipPath
-    $installDir = Join-Path $env:ProgramFiles "msys2"
+    $installDir = Join-Path $env:SystemDrive "msys2"
     try {
         Install-ZipCITool -ZipPath $zipPath `
                           -InstallDirectory $installDir `
-                          -EnvironmentPath @("$installDir\usr\bin")
+                          -EnvironmentPath @("$installDir\usr\bin", "$installDir\mingw64\bin")
     } catch {
         Remove-Item -Recurse -Force $installDir
         Throw
     }
-    pacman.exe -Syu gcc --noconfirm
+    pacman.exe -S mingw-w64-x86_64-gcc --noconfirm
     if($LASTEXITCODE) {
         Throw "ERROR: Failed to install gcc via MSys2 pacman"
     }
@@ -219,7 +218,7 @@ function Install-Msys2 {
 
 function Install-Git {
     Write-Output "Installing Git"
-    $installer = Join-Path $env:TEMP "git.exe"
+    $installer = Join-Path $env:TEMP "git-installer-64bit.exe"
     Start-FileDownload -URL $GIT_DOWNLOAD_LINK -Destination $installer
     Install-CITool -InstallerPath $installer `
                    -InstallDirectory $GIT_DIR `
@@ -287,31 +286,26 @@ function Install-Dig {
     Remove-Item -Force -Path $zipPath -ErrorAction SilentlyContinue
 }
 
-function Install-OPT202 {
+function Install-OTP {
     Write-Output "Installing Visual Studio 2013 Runtime"
     $installer = Join-Path $env:TEMP "vcredist_2013_x64.exe"
     Start-FileDownload -URL $2013_RUNTIME_DOWNLOAD_LINK -Destination $installer
     Install-CITool -InstallerPath $installer -ArgumentList @("/install", "/passive")
     Remove-Item -Force -Path $installer -ErrorAction SilentlyContinue
-    Write-Output "Installing Erlang 9.2 OTP distribution"
-    $zipPath = Join-Path $env:TEMP "erl9.2.zip"
-    Start-FileDownload -URL $OTP202_DOWNLOAD_LINK -Destination $zipPath
-    try {
-        Install-ZipCITool -ZipPath $zipPath -InstallDirectory $OPT202_DIR `
-                          -EnvironmentPath @("$OPT202_DIR\bin")
-    } catch {
-        Remove-Item -Recurse -Force $OPT202_DIR
-        Throw
-    }
-    Remove-Item -Force -Path $zipPath -ErrorAction SilentlyContinue
+    Write-Output "Installing Erlang OTP distribution"
+    $filePath = Join-Path $env:TEMP "otp_win64.exe"
+    Start-FileDownload -URL $OTP_DOWNLOAD_LINK -Destination $filePath
+    Install-CITool -InstallerPath $filePath -InstallDirectory $OTP_DIR `
+                   -ArgumentList @("/S", "/D=$OTP_DIR") -EnvironmentPath @("$OTP_DIR\bin")
+    Remove-Item -Force -Path $filePath -ErrorAction SilentlyContinue
     $config = @(
         "[erlang]",
-        "Bindir=$("$OPT202_DIR\erts-9.2\bin" -replace '\\', '\\')",
+        "Bindir=$("$OTP_DIR\erts-10.1\bin" -replace '\\', '\\')",
         "Progname=erl",
-        "Rootdir=$($OPT202_DIR -replace '\\', '\\')"
+        "Rootdir=$($OTP_DIR -replace '\\', '\\')"
     )
-    Set-Content -Path "$OPT202_DIR\bin\erl.ini" -Value $config
-    Set-Content -Path "$OPT202_DIR\erts-9.2\bin\erl.ini" -Value $config
+    Set-Content -Path "$OTP_DIR\bin\erl.ini" -Value $config
+    Set-Content -Path "$OTP_DIR\erts-10.1\bin\erl.ini" -Value $config
 }
 
 function Install-VisualStudio2017 {
@@ -475,11 +469,11 @@ function Start-DCOSNetTests {
 try {
     switch($Component) {
         "dcos-go" {
+            Install-7Zip
+            Install-Msys2
             Install-Git
             Install-Golang
             Install-GoDependencies
-            Install-7Zip
-            Install-Msys2
             Start-DCOSGoUnitTests
         }
         "dcos-metrics" {
@@ -489,6 +483,8 @@ try {
             Start-DCOSMetricsUnitTests
         }
         "dcos-diagnostics" {
+            Install-7Zip
+            Install-Msys2
             Install-Git
             Install-Golang
             Start-DCOSDiagnosticsUnitTests
@@ -497,7 +493,7 @@ try {
             Install-Git
             Install-7Zip
             Install-Dig
-            Install-OPT202
+            Install-OTP
             Install-VisualStudio2017
             Start-LibsodiumBuild
             Start-DCOSNetTests
