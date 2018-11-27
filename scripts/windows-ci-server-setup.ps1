@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $PACKAGES_DIRECTORY = Join-Path $env:TEMP "packages"
 $PACKAGES = @{
     "git" = @{
-        "url" = "http://downloads.mesosphere.io/ms-azure/assets/Git-2.17.1.2-64-bit.exe"
+        "url" = "https://github.com/git-for-windows/git/releases/download/v2.16.1.windows.3/Git-2.16.1.3-64-bit.exe"
         "local_file" = Join-Path $PACKAGES_DIRECTORY "git.exe"
     }
     "python36" = @{
