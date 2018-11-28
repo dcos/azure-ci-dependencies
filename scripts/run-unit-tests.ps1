@@ -13,10 +13,10 @@ $GIT_DOWNLOAD_LINK = "https://github.com/git-for-windows/git/releases/download/v
 $7_ZIP_DOWNLOAD_LINK = "https://www.7-zip.org/a/7z1801-x64.exe"
 $2012_RUNTIME_DOWNLOAD_LINK = "https://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe"
 $2013_RUNTIME_DOWNLOAD_LINK = "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
-$DIG_DOWNLOAD_LINK = "http://dcos-win.westus2.cloudapp.azure.com/downloads/dig-x64.zip"
+$DIG_DOWNLOAD_LINK = "https://downloads.mesosphere.io/ms-azure/assets/dig-x64.zip"
 $OTP_DOWNLOAD_LINK = "http://erlang.org/download/otp_win64_21.1.exe"
 $VS_2017_DOWNLOAD_LINK = "https://download.visualstudio.microsoft.com/download/pr/11886246/045b56eb413191d03850ecc425172a7d/vs_Community.exe"
-$MSYS2_DOWNLOAD_LINK = "http://dcos-win.westus2.cloudapp.azure.com/downloads/msys2-x64.zip"
+$MSYS2_DOWNLOAD_LINK = "http://downloads.mesosphere.io/ms-azure/assets/msys2-x64.zip"
 
 $GIT_DIR = Join-Path $env:ProgramFiles "Git"
 $GO_DIR = Join-Path $env:SystemDrive "go"
