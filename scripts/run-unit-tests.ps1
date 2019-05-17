@@ -461,7 +461,7 @@ function Start-DCOSNetTests {
     Start-ExecCall -FilePath "escript.exe" -ArgumentList @(".\rebar3", "as", "test,windows", "cover")
     Start-ExecCall -FilePath "escript.exe" -ArgumentList @(".\rebar3", "dialyzer")
     Start-ExecCall -FilePath "escript.exe" -ArgumentList @(".\rebar3", "edoc")
-    Start-ExecCall -FilePath "escript.exe" -ArgumentList @(".\rebar3", "as", "test,windows", "ct", "--suite=apps/dcos_dns/test/dcos_dns_handler_SUITE","-v")
+    Start-ExecCall -FilePath "escript.exe" -ArgumentList @(".\rebar3", "as", "test,windows", "ct", "--verbose", "--readable", "true", "--suite=apps/dcos_dns/test/dcos_dns_handler_SUITE")
     Pop-Location
 }
 
