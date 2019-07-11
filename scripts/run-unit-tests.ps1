@@ -255,7 +255,7 @@ function Install-Golang {
 
 function Install-GoDependencies {
     $deps = @(
-        "github.com/Sirupsen/logrus",
+        "github.com/sirupsen/logrus",
         "github.com/antonholmquist/jason"
     )
     foreach($d in $deps) {
